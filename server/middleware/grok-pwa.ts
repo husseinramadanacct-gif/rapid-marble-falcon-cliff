@@ -18,7 +18,7 @@ import installPageTemplate from "../../scripts/install-page.html?raw";
 import { grokOgIdentity } from "virtual:grok-og-identity";
 import {
   acceptsHtml,
-  createHeadInjector,
+  injectGrokPwaHead,
   isDocumentPath,
   isInstallQuery,
   renderInstallPageHtml,
@@ -36,28 +36,40 @@ function requestHost(event: GrokPwaEvent): string {
   );
 }
 
-function injectHeadStreaming(response: Response, host: string): Response {
-  const injector = createHeadInjector({
-    host,
-    site: grokOgIdentity.site,
-  });
-  const transformed = response.body!.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        for (const out of injector.push(chunk)) controller.enqueue(out);
-      },
-      flush(controller) {
-        for (const out of injector.flush()) controller.enqueue(out);
-      },
-    }),
-  );
-  const headers = new Headers(response.headers);
-  headers.delete("content-length");
-  return new Response(transformed, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
+function errorText(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}\n${error.stack ?? ""}`;
+  return String(error);
+}
+
+async function callNext(next: () => unknown | Promise<unknown>): Promise<unknown> {
+  try {
+    return await next();
+  } catch (error) {
+    return new Response(errorText(error), {
+      status: 500,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
+}
+
+async function injectHeadBuffered(response: Response, host: string): Promise<Response> {
+  try {
+    const html = await response.text();
+    const next = injectGrokPwaHead(html, { host, site: grokOgIdentity.site });
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    headers.set("content-type", "text/html; charset=utf-8");
+    return new Response(typeof next === "string" ? next : html, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  } catch (error) {
+    return new Response(errorText(error), {
+      status: 500,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
 }
 
 export default async function grokPwaMiddleware(
@@ -65,7 +77,7 @@ export default async function grokPwaMiddleware(
   next: () => unknown | Promise<unknown>,
 ): Promise<unknown> {
   const method = (event.req.method ?? "GET").toUpperCase();
-  if (method !== "GET") return next();
+  if (method !== "GET") return callNext(next);
 
   const path = event.url.pathname;
   const urlWithQuery = path + event.url.search;
@@ -96,16 +108,16 @@ export default async function grokPwaMiddleware(
     });
   }
 
-  if (!isDocumentPath(path)) return next();
+  if (!isDocumentPath(path)) return callNext(next);
 
-  const result = await next();
+  const result = await callNext(next);
   if (
     result instanceof Response &&
     result.body &&
     String(result.headers.get("content-type") ?? "").includes("text/html") &&
     !result.headers.get("content-encoding")
   ) {
-    return injectHeadStreaming(result, requestHost(event));
+    return injectHeadBuffered(result, requestHost(event));
   }
   return result;
 }

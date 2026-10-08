@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { cloneCv, emptyCv, isCvDoc, type CvDoc, type Lang } from "./cv-model";
 import { sampleAccountant } from "./cv-sample";
 
@@ -17,6 +17,28 @@ type CvState = {
   patchActive: (updater: (doc: CvDoc) => CvDoc) => void;
   importDoc: (doc: CvDoc) => void;
 };
+
+const memoryStorage: Storage = {
+  length: 0,
+  clear() {},
+  getItem() {
+    return null;
+  },
+  key() {
+    return null;
+  },
+  removeItem() {},
+  setItem() {},
+};
+
+function clientStorage(): Storage {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) return window.localStorage;
+  } catch {
+    /* private mode or server render */
+  }
+  return memoryStorage;
+}
 
 function seed(): Pick<CvState, "uiLang" | "activeId" | "docs"> {
   const doc = sampleAccountant("ar");
@@ -66,6 +88,7 @@ export const useCvStore = create<CvState>()(
     {
       name: "ats-cv-builder-v1",
       skipHydration: true,
+      storage: createJSONStorage(() => clientStorage()),
       partialize: (state) => ({
         uiLang: state.uiLang,
         activeId: state.activeId,

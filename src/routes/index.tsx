@@ -18,7 +18,10 @@ import {
 import { useActiveCv, useCvStore } from "@/lib/cv-store";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/")({
+  ssr: false,
+  component: Home,
+});
 
 function Home() {
   const uiLang = useCvStore((s) => s.uiLang);
