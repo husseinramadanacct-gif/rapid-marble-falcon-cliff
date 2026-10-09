@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { cloneCv, emptyCv, isCvDoc, type CvDoc, type Lang } from "./cv-model";
+import { restoreTailored, tailorCv } from "./cv-tailor";
 import { sampleAccountant } from "./cv-sample";
 
 type CvState = {
@@ -16,6 +17,8 @@ type CvState = {
   deleteActive: () => void;
   patchActive: (updater: (doc: CvDoc) => CvDoc) => void;
   importDoc: (doc: CvDoc) => void;
+  applyTailor: (title: string, jd: string) => void;
+  restoreTailor: () => void;
 };
 
 const memoryStorage: Storage = {
@@ -35,7 +38,7 @@ function clientStorage(): Storage {
   try {
     if (typeof window !== "undefined" && window.localStorage) return window.localStorage;
   } catch {
-    /* private mode or server render */
+    /* private mode / SSR */
   }
   return memoryStorage;
 }
@@ -83,6 +86,22 @@ export const useCvStore = create<CvState>()(
       importDoc: (doc) => {
         const next = isCvDoc(doc) ? { ...cloneCv(doc), updatedAt: Date.now() } : emptyCv(get().uiLang);
         set({ docs: [next, ...get().docs], activeId: next.id });
+      },
+      applyTailor: (title, jd) => {
+        const current = get().docs.find((item) => item.id === get().activeId);
+        if (!current || !title.trim() || !jd.trim()) return;
+        const { doc } = tailorCv(current, title, jd);
+        set({
+          docs: get().docs.map((item) => (item.id === current.id ? doc : item)),
+        });
+      },
+      restoreTailor: () => {
+        const current = get().docs.find((item) => item.id === get().activeId);
+        if (!current?.tailor) return;
+        const doc = restoreTailored(current);
+        set({
+          docs: get().docs.map((item) => (item.id === current.id ? doc : item)),
+        });
       },
     }),
     {

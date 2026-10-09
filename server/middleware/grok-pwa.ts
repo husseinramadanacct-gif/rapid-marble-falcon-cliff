@@ -36,23 +36,7 @@ function requestHost(event: GrokPwaEvent): string {
   );
 }
 
-function errorText(error: unknown): string {
-  if (error instanceof Error) return `${error.name}: ${error.message}\n${error.stack ?? ""}`;
-  return String(error);
-}
-
-async function callNext(next: () => unknown | Promise<unknown>): Promise<unknown> {
-  try {
-    return await next();
-  } catch (error) {
-    return new Response(errorText(error), {
-      status: 500,
-      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
-    });
-  }
-}
-
-async function injectHeadBuffered(response: Response, host: string): Promise<Response> {
+async function injectHead(response: Response, host: string): Promise<Response> {
   try {
     const html = await response.text();
     const next = injectGrokPwaHead(html, { host, site: grokOgIdentity.site });
@@ -64,11 +48,8 @@ async function injectHeadBuffered(response: Response, host: string): Promise<Res
       statusText: response.statusText,
       headers,
     });
-  } catch (error) {
-    return new Response(errorText(error), {
-      status: 500,
-      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
-    });
+  } catch {
+    return response;
   }
 }
 
@@ -77,7 +58,7 @@ export default async function grokPwaMiddleware(
   next: () => unknown | Promise<unknown>,
 ): Promise<unknown> {
   const method = (event.req.method ?? "GET").toUpperCase();
-  if (method !== "GET") return callNext(next);
+  if (method !== "GET") return next();
 
   const path = event.url.pathname;
   const urlWithQuery = path + event.url.search;
@@ -108,16 +89,16 @@ export default async function grokPwaMiddleware(
     });
   }
 
-  if (!isDocumentPath(path)) return callNext(next);
+  if (!isDocumentPath(path)) return next();
 
-  const result = await callNext(next);
+  const result = await next();
   if (
     result instanceof Response &&
     result.body &&
     String(result.headers.get("content-type") ?? "").includes("text/html") &&
     !result.headers.get("content-encoding")
   ) {
-    return injectHeadBuffered(result, requestHost(event));
+    return injectHead(result, requestHost(event));
   }
   return result;
 }

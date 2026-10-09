@@ -21,7 +21,16 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   ssr: false,
   component: Home,
+  pendingComponent: StudioPending,
 });
+
+function StudioPending() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-bg px-6 text-sm text-muted">
+      جاري فتح استوديو السيرة…
+    </div>
+  );
+}
 
 function Home() {
   const uiLang = useCvStore((s) => s.uiLang);
@@ -42,10 +51,15 @@ function Home() {
 
   useEffect(() => {
     const finish = () => useCvStore.getState().setHydrated(true);
-    if (useCvStore.persist.hasHydrated()) finish();
-    const unsub = useCvStore.persist.onFinishHydration(finish);
-    void useCvStore.persist.rehydrate();
-    return unsub;
+    try {
+      if (useCvStore.persist.hasHydrated()) finish();
+      const unsub = useCvStore.persist.onFinishHydration(finish);
+      void useCvStore.persist.rehydrate();
+      return unsub;
+    } catch {
+      finish();
+      return undefined;
+    }
   }, []);
 
   useEffect(() => {

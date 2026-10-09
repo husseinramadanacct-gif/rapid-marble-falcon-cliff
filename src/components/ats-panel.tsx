@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, CircleAlert, ClipboardList, Minus, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PdfFormatList } from "@/components/pdf-export";
@@ -9,9 +9,13 @@ import { cn } from "@/lib/utils";
 
 export function AtsPanel({ cv, uiLang }: { cv: CvDoc; uiLang: Lang }) {
   const copy = t(uiLang);
-  const [jd, setJd] = useState("");
+  const [jd, setJd] = useState(cv.tailor?.jd ?? "");
   const [activeSample, setActiveSample] = useState<string | null>(null);
   const report = useMemo(() => runAts(cv, jd), [cv, jd]);
+
+  useEffect(() => {
+    if (cv.tailor?.jd) setJd(cv.tailor.jd);
+  }, [cv.id, cv.tailor?.jd]);
 
   return (
     <aside className="flex min-w-0 flex-col gap-5 overflow-x-clip">

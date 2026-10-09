@@ -9,6 +9,7 @@ import {
   type CvDoc,
   type Lang,
 } from "@/lib/cv-model";
+import { CvTailorPanel } from "@/components/cv-tailor-panel";
 import { useCvStore } from "@/lib/cv-store";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ export function CvEditor({ cv, uiLang }: { cv: CvDoc; uiLang: Lang }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <CvTailorPanel cv={cv} uiLang={uiLang} />
       <section className="rounded-lg bg-bg-elevated p-5 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-ink">{copy.sectionProfile}</h2>

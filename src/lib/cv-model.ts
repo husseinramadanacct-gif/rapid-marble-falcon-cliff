@@ -37,6 +37,26 @@ export type CvProfile = {
   email: string;
 };
 
+export type CvBody = {
+  lang: Lang;
+  profile: CvProfile;
+  summary: string;
+  experience: ExperienceRole[];
+  education: EducationItem[];
+  skillGroups: SkillGroup[];
+  languages: LanguageItem[];
+  training: string[];
+  interests: string[];
+};
+
+export type TailorMeta = {
+  title: string;
+  jd: string;
+  matched: string[];
+  skipped: string[];
+  source: CvBody;
+};
+
 export type CvDoc = {
   id: string;
   lang: Lang;
@@ -49,6 +69,7 @@ export type CvDoc = {
   languages: LanguageItem[];
   training: string[];
   interests: string[];
+  tailor?: TailorMeta;
 };
 
 export const HEADINGS: Record<
@@ -166,6 +187,20 @@ export function filledLines(items: string[]): string[] {
 
 export function displayName(cv: CvDoc, fallback: string): string {
   return cv.profile.name.trim() || fallback;
+}
+
+export function snapshotBody(cv: CvDoc): CvBody {
+  return {
+    lang: cv.lang,
+    profile: structuredClone(cv.profile),
+    summary: cv.summary,
+    experience: structuredClone(cv.experience),
+    education: structuredClone(cv.education),
+    skillGroups: structuredClone(cv.skillGroups),
+    languages: structuredClone(cv.languages),
+    training: [...cv.training],
+    interests: [...cv.interests],
+  };
 }
 
 export function fileStem(cv: CvDoc): string {
