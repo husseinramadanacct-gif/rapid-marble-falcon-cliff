@@ -122,7 +122,7 @@ export const ui = {
     pickCv: "السير المحفوظة",
     emptyPreview: "ابدأ من التحرير على اليمين. المعاينة تتحدث فور الكتابة.",
     tailorTitle: "تعديل السيرة حسب الوظيفة",
-    tailorHint: "اكتب المسمى والصق الوصف، ثم اضغط التعديل. كل مرة تُبنى السيرة من النسخة الأصلية قبل أي تخصيص، حتى لا تتراكم الجمل. لا تُضاف خبرة غير مكتوبة عندك.",
+    tailorHint: "اكتب المسمى والصق الوصف. جهات العمل والتواريخ تبقى كما هي، والمسمى داخل كل خبرة والمهام والملخص تُصاغ كما يكتبها مدير موارد بشرية لهذا الدور. لا تُضاف شركة أو رقم غير موجود.",
     tailorRole: "المسمى الوظيفي المستهدف",
     tailorRolePh: "مثال: محاسب تكاليف",
     tailorJd: "الوصف الوظيفي المطلوب",
@@ -131,7 +131,7 @@ export const ui = {
     tailorRestore: "ارجع للنسخة قبل التعديل",
     tailorMatched: "ظهر في سيرتك وأُبرز",
     tailorSkipped: "في الإعلان ولم يُضف لأنه غير مذكور عندك",
-    tailorDone: "تم تعديل السيرة لهذا الإعلان.",
+    tailorDone: "اتعدّلت المسميات والمهام لهذا الدور. جهات العمل والتواريخ كما هي.",
   },
   en: {
     appName: "Resume Studio",
@@ -254,7 +254,7 @@ export const ui = {
     pickCv: "Saved resumes",
     emptyPreview: "Start in the editor. The preview updates as you type.",
     tailorTitle: "Tailor the resume to a job",
-    tailorHint: "Enter the title and paste the description, then tailor. Each run starts from the resume as it was before any tailoring, so wording does not stack. Experience you did not write is never added.",
+    tailorHint: "Enter the title and paste the description. Employers and dates stay the same. Titles, duties, and the summary are rewritten the way an HR manager would describe that role. No new employer or number is added.",
     tailorRole: "Target job title",
     tailorRolePh: "Example: Cost accountant",
     tailorJd: "Required job description",
@@ -263,7 +263,7 @@ export const ui = {
     tailorRestore: "Restore the version before tailoring",
     tailorMatched: "Already in your resume and highlighted",
     tailorSkipped: "In the job ad, not added because it is not in your resume",
-    tailorDone: "Resume tailored to this job.",
+    tailorDone: "Titles and duties now read for this role. Employers and dates are unchanged.",
   },
 } as const;
 
