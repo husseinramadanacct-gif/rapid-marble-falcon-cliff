@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   HEADINGS,
   contactLine,
@@ -23,18 +24,26 @@ export function CvDocument({ cv }: { cv: CvDoc }) {
   const contact = contactLine(cv);
 
   return (
-    <article id="cv-document" className="cv-page mx-auto w-full max-w-4xl text-ink">
+    <article id="cv-document" className="cv-page mx-auto w-full max-w-3xl text-ink">
       <header className="mb-5">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{name}</h1>
         {cv.profile.headline ? (
-          <p className="mt-1 text-sm font-medium text-accent sm:text-base">{cv.profile.headline}</p>
+          <p className="mt-1 text-sm font-medium text-accent sm:text-base">
+            <BidiText text={cv.profile.headline} />
+          </p>
         ) : null}
-        {contact ? <p className="mt-2 text-sm text-muted">{contact}</p> : null}
+        {contact ? (
+          <p className="mt-2 text-sm text-muted">
+            <BidiText text={contact} />
+          </p>
+        ) : null}
       </header>
 
       {cv.summary.trim() ? (
         <CvSection lang={lang} title={headings.summary}>
-          <p className="text-sm leading-relaxed text-ink">{cv.summary.trim()}</p>
+          <p className="text-sm leading-relaxed text-ink">
+            <BidiText text={cv.summary.trim()} />
+          </p>
         </CvSection>
       ) : null}
 
@@ -43,17 +52,28 @@ export function CvDocument({ cv }: { cv: CvDoc }) {
           <div className="flex flex-col gap-5">
             {roles.map((role) => (
               <section key={role.id}>
-                <h3 className="text-base font-semibold text-ink">
-                  {role.title}
-                  {role.company ? <span className="font-normal text-muted"> — {role.company}</span> : null}
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className="min-w-0 text-base font-semibold text-ink">
+                    <BidiText text={role.title} />
+                    {role.company ? (
+                      <span className="font-normal text-muted">
+                        {" "}
+                        — <BidiText text={role.company} />
+                      </span>
+                    ) : null}
+                  </h3>
                   {dateRange(role) ? (
-                    <span className="text-sm font-medium text-muted"> · {dateRange(role)}</span>
+                    <p className="whitespace-nowrap text-sm font-medium text-muted" dir="ltr">
+                      {dateRange(role)}
+                    </p>
                   ) : null}
-                </h3>
+                </div>
                 {role.bullets.length ? (
                   <ul className="mt-2 list-disc space-y-1 ps-5 text-sm leading-relaxed text-ink">
-                    {role.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
+                    {role.bullets.map((bullet, index) => (
+                      <li key={`${role.id}-${index}`}>
+                        <BidiText text={bullet} />
+                      </li>
                     ))}
                   </ul>
                 ) : null}
@@ -82,8 +102,12 @@ export function CvDocument({ cv }: { cv: CvDoc }) {
           <div className="flex flex-col gap-3">
             {groups.map((group) => (
               <p key={group.id} className="text-sm leading-relaxed text-ink">
-                {group.title ? <span className="font-semibold">{group.title}: </span> : null}
-                {group.items.filter((item) => item.trim()).join("  ·  ")}
+                {group.title ? (
+                  <span className="font-semibold">
+                    <BidiText text={group.title} />:{" "}
+                  </span>
+                ) : null}
+                <BidiText text={group.items.filter((item) => item.trim()).join("  ·  ")} />
               </p>
             ))}
           </div>
@@ -93,20 +117,26 @@ export function CvDocument({ cv }: { cv: CvDoc }) {
       {langs.length ? (
         <CvSection lang={lang} title={headings.languages}>
           <p className="text-sm text-ink">
-            {langs.map((item) => (item.level ? `${item.name} (${item.level})` : item.name)).join("  ·  ")}
+            <BidiText
+              text={langs.map((item) => (item.level ? `${item.name} (${item.level})` : item.name)).join("  ·  ")}
+            />
           </p>
         </CvSection>
       ) : null}
 
       {training.length ? (
         <CvSection lang={lang} title={headings.training}>
-          <p className="text-sm leading-relaxed text-ink">{training.join("  ·  ")}</p>
+          <p className="text-sm leading-relaxed text-ink">
+            <BidiText text={training.join("  ·  ")} />
+          </p>
         </CvSection>
       ) : null}
 
       {interests.length ? (
         <CvSection lang={lang} title={headings.interests}>
-          <p className="text-sm leading-relaxed text-ink">{interests.join("  ·  ")}</p>
+          <p className="text-sm leading-relaxed text-ink">
+            <BidiText text={interests.join("  ·  ")} />
+          </p>
         </CvSection>
       ) : null}
     </article>
@@ -120,7 +150,7 @@ function CvSection({
 }: {
   lang: CvDoc["lang"];
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="mb-5">
@@ -136,4 +166,23 @@ function CvSection({
       {children}
     </section>
   );
+}
+
+function BidiText({ text }: { text: string }) {
+  const re =
+    /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(\+?\d[\d\s./()-]{4,}\d)|([A-Za-z][A-Za-z0-9+#./&'’_-]*(?:\s+[A-Za-z0-9+#./&'’_-]+)*)/g;
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(re)) {
+    const index = match.index ?? 0;
+    if (index > last) nodes.push(text.slice(last, index));
+    nodes.push(
+      <bdi key={index} dir="ltr">
+        {match[0]}
+      </bdi>,
+    );
+    last = index + match[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return <>{nodes}</>;
 }

@@ -53,8 +53,8 @@ export function CvEditor({ cv, uiLang }: { cv: CvDoc; uiLang: Lang }) {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Field label={copy.name} value={cv.profile.name} onChange={(name) => patch((d) => ({ ...d, profile: { ...d.profile, name } }))} />
           <Field label={copy.headline} value={cv.profile.headline} onChange={(headline) => patch((d) => ({ ...d, profile: { ...d.profile, headline } }))} />
-          <Field label={copy.email} value={cv.profile.email} onChange={(email) => patch((d) => ({ ...d, profile: { ...d.profile, email } }))} />
-          <Field label={copy.phone} value={cv.profile.phone} onChange={(phone) => patch((d) => ({ ...d, profile: { ...d.profile, phone } }))} />
+          <Field label={copy.email} value={cv.profile.email} dir="ltr" onChange={(email) => patch((d) => ({ ...d, profile: { ...d.profile, email } }))} />
+          <Field label={copy.phone} value={cv.profile.phone} dir="ltr" onChange={(phone) => patch((d) => ({ ...d, profile: { ...d.profile, phone } }))} />
           <Field label={copy.location} value={cv.profile.location} onChange={(location) => patch((d) => ({ ...d, profile: { ...d.profile, location } }))} />
         </div>
       </section>
@@ -382,16 +382,23 @@ function Field({
   value,
   onChange,
   className,
+  dir,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  dir?: "ltr" | "rtl";
 }) {
   return (
     <label className={cn("block text-xs font-medium text-muted", className)}>
       {label}
-      <input value={value} onChange={(event) => onChange(event.target.value)} className={cn(fieldClass(), "mt-1")} />
+      <input
+        dir={dir}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={cn(fieldClass(), "mt-1", dir === "ltr" && "text-left")}
+      />
     </label>
   );
 }

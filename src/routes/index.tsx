@@ -208,23 +208,30 @@ function Home() {
         </div>
       </header>
 
-      <div className="print-root mx-auto grid max-w-screen-2xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)] xl:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)_minmax(20rem,24rem)]">
-        <section
+      <div className="print-root mx-auto grid max-w-screen-2xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(22rem,30rem)_minmax(0,1fr)]">
+        <div
           className={cn(
-            "no-print min-w-0 xl:block xl:max-h-[calc(100dvh-9rem)] xl:overflow-y-auto",
-            tab === "edit" ? "block" : "hidden",
+            "no-print min-w-0 lg:max-h-[calc(100dvh-8.5rem)] lg:overflow-y-auto",
+            tab === "cv" ? "hidden lg:block" : "block",
           )}
         >
-          {hydrated ? <CvEditor cv={cv} uiLang={uiLang} /> : <p className="text-sm text-muted">{copy.saved}</p>}
-        </section>
-        <section className={cn("min-w-0 xl:block", tab === "cv" ? "block" : "hidden")}>
+          <section className={cn(tab === "ats" ? "hidden lg:block" : "block")}>
+            {hydrated ? <CvEditor cv={cv} uiLang={uiLang} /> : <p className="text-sm text-muted">{copy.saved}</p>}
+          </section>
+          <section className={cn("mt-6", tab === "edit" ? "hidden lg:block" : "block")}>
+            <AtsPanel cv={cv} uiLang={uiLang} />
+          </section>
+        </div>
+        <section
+          className={cn(
+            "min-w-0 lg:max-h-[calc(100dvh-8.5rem)] lg:overflow-y-auto lg:pe-1",
+            tab === "cv" ? "block" : "hidden lg:block",
+          )}
+        >
           <div dir={cv.lang === "ar" ? "rtl" : "ltr"}>
             <CvDocument cv={cv} />
           </div>
           <p className="no-print mt-3 text-center text-xs text-subtle">{copy.exportHint}</p>
-        </section>
-        <section className={cn("no-print min-w-0 xl:block", tab === "ats" ? "block" : "hidden")}>
-          <AtsPanel cv={cv} uiLang={uiLang} />
         </section>
       </div>
     </main>
